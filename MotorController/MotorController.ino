@@ -1,7 +1,7 @@
 #include <Servo.h>
 
 const int analogPin = A1;
-const int emergencyPin = 6;
+const int stopPin = 6;
 const int startPin = 10;
 Servo esc;
 unsigned long previousMillis = 0;
@@ -9,8 +9,7 @@ const long interval = 50;
 
 enum MotorState {
   STOPPED,
-  RUNNING,
-  EMERGENCY_STOP
+  RUNNING
 };
 
 MotorState currentMotorState = STOPPED;
@@ -25,10 +24,6 @@ void changeMotorState(MotorState newState) {
       case RUNNING:
         Serial.println("Motor running.");
         break;
-      case EMERGENCY_STOP:
-        esc.writeMicroseconds(1000);
-        Serial.println("Emergency Stop Activated!");
-        break;
     }
     currentMotorState = newState;
   }
@@ -39,21 +34,17 @@ void setup() {
   esc.attach(9);
   esc.writeMicroseconds(1000);
 
-  pinMode(emergencyPin, INPUT_PULLUP);
+  pinMode(stopPin, INPUT_PULLUP);
   pinMode(startPin, INPUT_PULLUP);
 }
 
 void loop() {
   unsigned long currentMillis = millis();
 
-  if (digitalRead(emergencyPin) == LOW) {
-    changeMotorState(EMERGENCY_STOP);
+  if (digitalRead(stopPin) == LOW) {
+    changeMotorState(STOPPED);
   } else if (digitalRead(startPin) == LOW && currentMotorState != RUNNING) {
     changeMotorState(RUNNING);
-  }
-
-  if (currentMotorState == EMERGENCY_STOP) {
-    return;
   }
 
   if (currentMillis - previousMillis >= interval && currentMotorState == RUNNING) {
